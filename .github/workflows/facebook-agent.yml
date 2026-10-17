@@ -1,0 +1,67 @@
+name: CHILD & HOPE Agentic Facebook Workflow
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "content/**"
+      - "requirements.txt"
+      - ".github/workflows/facebook-agent.yml"
+  schedule:
+    - cron: "0 14 * * *" # daily at 14:00 UTC; publishing still requires explicit gates
+
+permissions:
+  contents: read
+
+concurrency:
+  group: child-hope-facebook-pipeline
+  cancel-in-progress: false
+
+jobs:
+  child-hope-orchestrator:
+    runs-on: ubuntu-latest
+    environment: facebook-production
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Syntax check
+        run: python -m compileall -q src
+
+      - name: Run single Agentic AI orchestrator
+        env:
+          # Secrets must be securely configured in the facebook-production environment.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+          # Non-secret defaults are defined here so missing GitHub variables do not break diagnostics.
+          OPENAI_MODEL: "gpt-4.1-mini"
+          EXPECTED_FB_PAGE_ID: "1345909531941708"
+          # Keep publishing off unless explicitly enabled after credential and approval checks.
+          AUTO_PUBLISH: ${{ vars.AUTO_PUBLISH }}
+          APPROVED_CONTENT_SHA256: ${{ vars.APPROVED_CONTENT_SHA256 }}
+        run: python src/orchestrator_agent.py
+
+      - name: Upload reports and draft
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: child-and-hope-agentic-run-report
+          path: |
+            orchestrator_report.md
+            setup_agent_report.md
+            troubleshooting_report.md
+            draft_caption.txt
+          if-no-files-found: ignore
+          retention-days: 14
