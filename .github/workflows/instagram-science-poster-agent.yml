@@ -1,6 +1,11 @@
 name: Instagram Science Poster Agent
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/instagram-science-poster-agent.yml'
   workflow_dispatch:
     inputs:
       publish_now:
@@ -36,7 +41,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check "Pillow>=10,<13" "requests>=2.31,<3"
 
       - name: Verify publishing credentials resolve to @wowscifi
-        if: ${{ inputs.publish_now }}
+        if: ${{ github.event_name == 'push' || inputs.publish_now }}
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
@@ -77,7 +82,7 @@ jobs:
           exit 1
 
       - name: Publish to Instagram (single-run, minimal approvals)
-        if: ${{ inputs.publish_now }}
+        if: ${{ github.event_name == 'push' || inputs.publish_now }}
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
