@@ -1,0 +1,90 @@
+name: Instagram Science Poster Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_now:
+        description: "Publish the generated poster to Instagram immediately"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-science-poster-agent
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install renderer and API client
+        run: python -m pip install --disable-pip-version-check "Pillow>=10,<13" "requests>=2.31,<3"
+
+      - name: Build structured science poster and run quality gates
+        run: python src/instagram_science_poster_agent.py
+
+      - name: Commit publicly readable poster asset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/generated/arrow_of_time.png artifacts/instagram_caption.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Build structured Arrow of Time Instagram poster"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          else
+            echo "Poster assets unchanged; existing public asset remains usable."
+          fi
+
+      - name: Wait for public asset and validate URL
+        id: asset
+        env:
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/docs/generated/arrow_of_time.png"
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --head "$URL" >/dev/null; then
+              echo "image_url=$URL" >> "$GITHUB_OUTPUT"
+              echo "Public image asset verified."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Public image URL did not become reachable within 60 seconds." >&2
+          exit 1
+
+      - name: Publish to Instagram (single-run, minimal approvals)
+        if: ${{ inputs.publish_now }}
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_GRAPH_API_VERSION: ${{ vars.META_GRAPH_API_VERSION || 'v23.0' }}
+          IMAGE_URL: ${{ steps.asset.outputs.image_url }}
+        run: python src/instagram_science_poster_agent.py --publish --image-url "$IMAGE_URL"
+
+      - name: Upload poster, caption and receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instagram-science-poster-agent-output
+          path: |
+            docs/generated/arrow_of_time.png
+            artifacts/instagram_caption.txt
+            artifacts/publication_receipt.txt
+          if-no-files-found: warn
+          retention-days: 30
