@@ -9,8 +9,9 @@ GRAPH_VERSION = os.getenv("FB_GRAPH_VERSION", "v23.0")
 PAGE_ID = os.getenv("EXPECTED_FB_PAGE_ID", "1345909531941708").strip()
 TOKEN = os.getenv("FB_PAGE_ACCESS_TOKEN", "")
 ROOT = Path(__file__).resolve().parents[1]
-POSTER = ROOT / "downloaded-artifact" / "child_hope_research_poster.png"
-CAPTION_FILE = ROOT / "downloaded-artifact" / "poster_caption.txt"
+POSTER_DIR = Path(os.getenv("POSTER_DIR", str(ROOT / "downloaded-artifact")))
+POSTER = POSTER_DIR / "child_hope_research_poster.png"
+CAPTION_FILE = POSTER_DIR / "poster_caption.txt"
 REPORT = ROOT / "facebook_research_poster_receipt.md"
 
 def sha256_file(path):
@@ -68,7 +69,7 @@ def main():
         f"- Post/photo ID: {post_id}", f"- Poster SHA-256: {poster_hash}",
         f"- Caption SHA-256: {caption_hash}",
         f"- Permalink: {permalink or 'Meta did not return a permalink; locate the post using the ID.'}", "",
-        "Publication was initiated manually after a reviewer inspected the research poster artifact.", ""]),
+        "Publication was initiated by the scheduled or manually dispatched agent after automated output checks.", ""]),
         encoding="utf-8")
     print(f"Published research poster to {page.get('name', 'configured Page')}; post ID: {post_id}")
     print(f"Permalink: {permalink or 'not returned by Meta'}")
