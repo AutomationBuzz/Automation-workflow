@@ -49,6 +49,47 @@ jobs:
           RESEARCH_MAX_RECORDS: "50"
         run: python src/research_poster_agent.py
 
+      - name: Validate poster output before any publication
+        if: success()
+        run: |
+          set -euo pipefail
+          test -s artifacts/child_hope_research_poster.png
+          test -s artifacts/research_summary.md
+          test -s artifacts/poster_caption.txt
+          grep -q "Status: DRAFT" artifacts/research_summary.md
+          grep -q "https://pubmed.ncbi.nlm.nih.gov/" artifacts/poster_caption.txt
+          python - <<'PY'
+          from PIL import Image
+          image = Image.open("artifacts/child_hope_research_poster.png")
+          image.verify()
+          image = Image.open("artifacts/child_hope_research_poster.png")
+          if image.size != (1080, 1350):
+              raise SystemExit(f"Unexpected poster dimensions: {image.size}")
+          caption = open("artifacts/poster_caption.txt", encoding="utf-8").read().strip()
+          if len(caption) < 80 or len(caption) > 5000:
+              raise SystemExit("Caption length is outside safe limits.")
+          print("Poster image, source citation, summary, and caption checks passed.")
+          PY
+
+      - name: Publish validated poster automatically
+        if: success() && vars.AUTO_PUBLISH == 'true'
+        env:
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+          EXPECTED_FB_PAGE_ID: "1345909531941708"
+          FB_GRAPH_VERSION: "v23.0"
+          POSTER_DIR: artifacts
+        run: |
+          set -euo pipefail
+          if [ -z "$FB_PAGE_ACCESS_TOKEN" ]; then
+            echo "::error::AUTO_PUBLISH=true but FB_PAGE_ACCESS_TOKEN is missing from facebook-production."
+            exit 1
+          fi
+          python src/publish_research_poster.py
+
+      - name: Keep draft-only mode when automatic publishing is disabled
+        if: success() && vars.AUTO_PUBLISH != 'true'
+        run: echo "Poster generated and validated. AUTO_PUBLISH is not true; no Facebook post was sent."
+
       - name: Commit research deduplication history
         if: success()
         uses: stefanzweifel/git-auto-commit-action@v5
