@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTENT_FILE = ROOT / "content" / "arrow_of_time.json"
-OUT_FILE = ROOT / "docs" / "generated" / "arrow_of_time.png"
+OUT_FILE = ROOT / "docs" / "generated" / "arrow_of_time.jpg"
 CAPTION_FILE = ROOT / "artifacts" / "instagram_caption.txt"
 W, H = 1080, 1350
 BG, INK, MUTED = "#F4F1E9", "#152D3A", "#52656C"
@@ -155,7 +155,7 @@ def render_poster(c, path=OUT_FILE):
     d.rectangle((0, 1235, W, H), fill=INK)
     d.text((58, 1253), "THE TAKEAWAY", font=font(18, True), fill="#A9E2D8")
     paragraph(d, (58, 1280), c["takeaway"], font(25, True), WHITE, 950, leading=2, max_lines=2)
-    img.save(path, format="PNG", optimize=True)
+    img.save(path, format="JPEG", quality=94, optimize=True, progressive=True)
 
 
 def write_caption(c):
@@ -186,6 +186,18 @@ def publish_to_instagram(image_url, caption):
             msg = data.get("error", {}).get("message", str(data)) if isinstance(data, dict) else str(data)
             raise RuntimeError(f"Instagram API failed at {stage}: HTTP {response.status_code}: {msg}")
         return data
+
+    profile = checked(session.get(f"{base}/{ig_user_id}", params={
+        "fields": "username", "access_token": token
+    }, timeout=25), "verify destination account")
+    actual_username = str(profile.get("username", "")).lstrip("@").casefold()
+    expected_username = "wowscifi"
+    if actual_username != expected_username:
+        raise RuntimeError(
+            f"SAFETY STOP: IG_USER_ID resolves to @{actual_username or 'unknown'}, "
+            f"not the required @{expected_username}. No media was created or published."
+        )
+    print("TARGET_ACCOUNT_VERIFIED: @wowscifi")
 
     head = session.head(image_url, timeout=25, allow_redirects=True)
     if not head.ok or not head.headers.get("content-type", "").lower().startswith("image/"):
@@ -241,7 +253,7 @@ def main():
     render_poster(c)
     write_caption(c)
     with Image.open(OUT_FILE) as image:
-        if image.size != (W, H) or image.format != "PNG" or OUT_FILE.stat().st_size < 60000:
+        if image.size != (W, H) or image.format != "JPEG" or OUT_FILE.stat().st_size < 40000:
             raise RuntimeError(f"Layout QA failed: {image.size}, {image.format}, {OUT_FILE.stat().st_size} bytes")
     print(f"LAYOUT_QA_PASS: {OUT_FILE} {W}x{H} {OUT_FILE.stat().st_size} bytes")
     print(f"CAPTION_READY: {CAPTION_FILE}")
