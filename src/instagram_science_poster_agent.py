@@ -170,7 +170,7 @@ def verify_instagram_account() -> str:
     """Validate the configured token and fail closed unless it identifies @wowscifi."""
     token = os.environ.get("META_ACCESS_TOKEN", "").strip()
     ig_user_id = os.environ.get("IG_USER_ID", "").strip()
-    version = os.environ.get("META_GRAPH_API_VERSION", "v23.0").strip()
+    version = os.environ.get("META_GRAPH_API_VERSION", "v26.0").strip()
     if not token:
         raise RuntimeError("Missing GitHub Actions secret META_ACCESS_TOKEN.")
     if not ig_user_id:
@@ -202,7 +202,7 @@ def verify_instagram_account() -> str:
 def publish_to_instagram(image_url, caption):
     token = os.environ.get("META_ACCESS_TOKEN", "").strip()
     ig_user_id = os.environ.get("IG_USER_ID", "").strip()
-    version = os.environ.get("META_GRAPH_API_VERSION", "v23.0").strip()
+    version = os.environ.get("META_GRAPH_API_VERSION", "v26.0").strip()
     if not token or not ig_user_id:
         raise RuntimeError("Missing GitHub secrets IG_USER_ID and/or META_ACCESS_TOKEN")
     if not version.startswith("v"):
