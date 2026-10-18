@@ -166,6 +166,39 @@ def write_caption(c):
     CAPTION_FILE.write_text(text + "\n", encoding="utf-8")
 
 
+def verify_instagram_account() -> str:
+    """Validate the configured token and fail closed unless it identifies @wowscifi."""
+    token = os.environ.get("META_ACCESS_TOKEN", "").strip()
+    ig_user_id = os.environ.get("IG_USER_ID", "").strip()
+    version = os.environ.get("META_GRAPH_API_VERSION", "v23.0").strip()
+    if not token:
+        raise RuntimeError("Missing GitHub Actions secret META_ACCESS_TOKEN.")
+    if not ig_user_id:
+        raise RuntimeError("Missing GitHub Actions secret IG_USER_ID.")
+    if not version.startswith("v"):
+        raise RuntimeError("META_GRAPH_API_VERSION must start with v.")
+    response = requests.get(
+        f"https://graph.facebook.com/{version}/{ig_user_id}",
+        params={"fields": "username", "access_token": token},
+        timeout=25,
+    )
+    try:
+        data = response.json()
+    except ValueError:
+        data = {}
+    if not response.ok or (isinstance(data, dict) and data.get("error")):
+        message = data.get("error", {}).get("message", str(data)) if isinstance(data, dict) else str(data)
+        raise RuntimeError(f"Meta credential preflight failed: HTTP {response.status_code}: {message}")
+    username = str(data.get("username", "")).lstrip("@").casefold()
+    if username != "wowscifi":
+        raise RuntimeError(
+            f"SAFETY STOP: IG_USER_ID resolves to @{username or 'unknown'}, not @wowscifi. "
+            "No post will be created."
+        )
+    print("ACCOUNT_SECRET_PREFLIGHT_PASS: credentials resolve to @wowscifi")
+    return username
+
+
 def publish_to_instagram(image_url, caption):
     token = os.environ.get("META_ACCESS_TOKEN", "").strip()
     ig_user_id = os.environ.get("IG_USER_ID", "").strip()
@@ -240,9 +273,13 @@ def publish_to_instagram(image_url, caption):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check-account", action="store_true", help="Validate Meta secrets resolve to @wowscifi")
     parser.add_argument("--publish", action="store_true", help="Publish after rendering and quality checks")
     parser.add_argument("--image-url", default="", help="Public HTTPS URL to the committed PNG")
     args = parser.parse_args()
+    if args.check_account:
+        verify_instagram_account()
+        return 0
     c = json.loads(CONTENT_FILE.read_text(encoding="utf-8"))
     problems = validate_content(c)
     if problems:
