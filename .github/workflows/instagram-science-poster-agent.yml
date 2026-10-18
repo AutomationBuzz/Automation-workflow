@@ -35,6 +35,14 @@ jobs:
       - name: Install renderer and API client
         run: python -m pip install --disable-pip-version-check "Pillow>=10,<13" "requests>=2.31,<3"
 
+      - name: Verify publishing credentials resolve to @wowscifi
+        if: ${{ inputs.publish_now }}
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_GRAPH_API_VERSION: ${{ vars.META_GRAPH_API_VERSION || 'v26.0' }}
+        run: python src/instagram_science_poster_agent.py --check-account
+
       - name: Build structured science poster and run quality gates
         run: python src/instagram_science_poster_agent.py
 
@@ -73,7 +81,7 @@ jobs:
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-          META_GRAPH_API_VERSION: ${{ vars.META_GRAPH_API_VERSION || 'v23.0' }}
+          META_GRAPH_API_VERSION: ${{ vars.META_GRAPH_API_VERSION || 'v26.0' }}
           IMAGE_URL: ${{ steps.asset.outputs.image_url }}
         run: python src/instagram_science_poster_agent.py --publish --image-url "$IMAGE_URL"
 
