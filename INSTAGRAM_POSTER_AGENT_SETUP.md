@@ -4,7 +4,7 @@ This is a deterministic poster-building and Instagram publishing pipeline. It lo
 
 ## One-click run (maximum 10 minutes)
 
-Open the GitHub Actions workflow named Instagram Science Poster Agent, click Run workflow, leave publish_now set to true, and start the run. The workflow has timeout-minutes set to 10. There is no intermediate poster approval step; a run with publish_now=true is authorized to create a public Instagram post immediately.
+Open the GitHub Actions workflow named Instagram Science Poster Agent, click Run workflow, leave publish_now set to true, and start the run. The workflow has timeout-minutes set to 10. There is no intermediate poster approval step; a run with publish_now=true is authorized to create a public Instagram post immediately. The account preflight validates both secrets and the exact destination username before the build is uploaded; a mismatch or missing credential stops the run.
 
 Workflow file: .github/workflows/instagram-science-poster-agent.yml
 
@@ -17,7 +17,7 @@ In repository Settings → Secrets and variables → Actions → Secrets, create
 
 The implementation is pinned to **@wowscifi** and verifies the API-resolved username before every publish attempt. It uses the Graph API Facebook Login route. The target Instagram account must be Professional (Business or Creator) and linked to a Facebook Page; the app/token must have the required publishing permissions, commonly instagram_basic, instagram_content_publish, pages_show_list, and pages_read_engagement. Permissions vary by the app's setup and review state.
 
-Optionally set the repository variable META_GRAPH_API_VERSION to a Graph API version supported by your app. If absent, this workflow uses v23.0 as its default; change it when needed.
+Optionally set the repository variable META_GRAPH_API_VERSION to a Graph API version supported by your app. If absent, this workflow uses v26.0 as its default; change it when needed.
 
 Never store tokens in code, content files, commit messages, captions, or logs.
 
