@@ -1,0 +1,33 @@
+{
+  "slug": "arrow-of-time",
+  "title": "THE ARROW OF TIME",
+  "subtitle": "The laws can run backward. Our experience usually cannot.",
+  "thesis": "Time's everyday direction is connected to the universe's special low-entropy beginning and the statistical tendency of isolated systems toward higher entropy.",
+  "timeline": [
+    {"label": "PAST", "detail": "special initial conditions", "state": "ordered"},
+    {"label": "PRESENT", "detail": "irreversible processes", "state": "mixed"},
+    {"label": "FUTURE", "detail": "more likely macrostates", "state": "dispersed"}
+  ],
+  "second_law": {
+    "equation": "ΔS ≥ 0",
+    "heading": "THE THERMODYNAMIC ARROW",
+    "body": "For an isolated system, total entropy does not decrease. Heat spreads from warmer to cooler surroundings; the reverse is possible in principle, but overwhelmingly unlikely for macroscopic systems."
+  },
+  "boltzmann": {
+    "equation": "S = k_B ln Ω",
+    "heading": "ENTROPY COUNTS POSSIBILITIES",
+    "body": "Ω is the number of microscopic configurations compatible with a macrostate. Macrostates with more compatible configurations are statistically favored."
+  },
+  "microscopic": {
+    "equation": "m d²x/dt² = F(x)",
+    "heading": "MICROSCOPIC LAWS",
+    "body": "For many classical systems with time-independent forces, the equations are time-reversal symmetric: reversing a trajectory's velocities can produce another valid trajectory. The equations alone do not explain why entropy began so low."
+  },
+  "cosmic": {
+    "heading": "THE COSMIC CLUE",
+    "body": "The early universe was extraordinarily smooth, with low gravitational entropy. How those special initial conditions arose is still a deep question in cosmology. Expansion by itself is not the complete explanation."
+  },
+  "takeaway": "The arrow of time links a special cosmic beginning with the statistics of change.",
+  "caption": "Why does time seem to move forward? The Second Law says total entropy in an isolated system does not decrease: ΔS_total ≥ 0. Boltzmann's relation S = k_B ln Ω connects entropy to the number of compatible microscopic states. Yet many microscopic laws are approximately time-reversal symmetric. The puzzle is why the universe began in an extraordinarily special, low-gravitational-entropy state. The arrow of time is therefore a story about initial conditions and statistical behavior—not simply a direction written into every equation. Which part of this puzzle would you explore next?",
+  "hashtags": ["#ArrowOfTime", "#Physics", "#Entropy", "#Cosmology", "#StatisticalMechanics", "#ScienceExplained", "#MathematicalPhysics"]
+}
